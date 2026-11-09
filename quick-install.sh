@@ -381,7 +381,7 @@ xattr -cr "$BUILDER_DIR/extracted" 2>/dev/null || true
 # ---------------------------------------------------------------------------
 step "Translating & compiling native game engine"
 
-BUILD_WORK="$TMP/build_work"
+BUILD_WORK="$BUILDER_DIR/work"
 mkdir -p "$BUILD_WORK"
 
 BUILD_SRC="$ASSET_SRC"
@@ -418,6 +418,7 @@ if [ "$FANCY" = yes ]; then
 		done
 	) &
 	cleaner_pid=$!
+	disown "$cleaner_pid" 2>/dev/null || true
 	printf '\033[?25l'
 	spin_idx=0
 	last_line="Initializing translator..."
@@ -432,6 +433,7 @@ if [ "$FANCY" = yes ]; then
 	done
 	wait "$b_pid" || rc=$?
 	kill "$cleaner_pid" 2>/dev/null || true
+	wait "$cleaner_pid" 2>/dev/null || true
 	printf '\033[?25h'
 	if [ "${rc:-0}" -ne 0 ]; then
 		printf '\r  %s✘%s Build failed\033[K\n' "$RED" "$RESET"
@@ -449,8 +451,10 @@ else
 		done
 	) &
 	cleaner_pid=$!
-	compile_engine || { kill "$cleaner_pid" 2>/dev/null || true; tail -n 25 "$BUILD_OUTPUT"; die "engine compilation failed"; }
+	disown "$cleaner_pid" 2>/dev/null || true
+	compile_engine || { kill "$cleaner_pid" 2>/dev/null || true; wait "$cleaner_pid" 2>/dev/null || true; tail -n 25 "$BUILD_OUTPUT"; die "engine compilation failed"; }
 	kill "$cleaner_pid" 2>/dev/null || true
+	wait "$cleaner_pid" 2>/dev/null || true
 fi
 
 BUILT_APP="$TMP/Liberty Pro Max.app"
@@ -462,13 +466,23 @@ fi
 mv "$BUILT_APP" "$APP"
 
 # Inject our native launcher & metadata
-cp "$SCRIPT_DIR/src/macIV" "$APP/Contents/MacOS/macIV" 2>/dev/null || true
-if [ ! -f "$APP/Contents/MacOS/macIV" ]; then
-	clang -O3 -arch arm64 -framework CoreFoundation "$SCRIPT_DIR/src/macIV.c" -o "$APP/Contents/MacOS/macIV"
+RAW_BASE="https://raw.githubusercontent.com/tanmayisdumb/macIV/main"
+if [ -f "$SCRIPT_DIR/src/macIV" ]; then
+	cp "$SCRIPT_DIR/src/macIV" "$APP/Contents/MacOS/macIV"
+else
+	MACIV_C="$TMP/macIV.c"
+	if [ -f "$SCRIPT_DIR/src/macIV.c" ]; then
+		cp "$SCRIPT_DIR/src/macIV.c" "$MACIV_C"
+	else
+		curl -fsSL "$RAW_BASE/src/macIV.c" -o "$MACIV_C"
+	fi
+	clang -O3 -arch arm64 -framework CoreFoundation "$MACIV_C" -o "$APP/Contents/MacOS/macIV"
 fi
 
 if [ -f "$SCRIPT_DIR/src/macIV.icns" ]; then
 	cp "$SCRIPT_DIR/src/macIV.icns" "$APP/Contents/Resources/macIV.icns"
+else
+	curl -fsSL "$RAW_BASE/src/macIV.icns" -o "$APP/Contents/Resources/macIV.icns" 2>/dev/null || true
 fi
 
 /usr/libexec/PlistBuddy -c "Set :CFBundleName $APP_NAME" \
