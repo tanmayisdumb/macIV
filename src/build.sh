@@ -59,6 +59,8 @@ if [ ! -d "$EXTRACT_DIR" ]; then
     mkdir -p "$EXTRACT_DIR"
     unzip -q "$ZIP_FILE" -d "$EXTRACT_DIR"
 fi
+find "$EXTRACT_DIR" -name "._*" -delete 2>/dev/null || true
+xattr -cr "$EXTRACT_DIR" 2>/dev/null || true
 
 KIT_SOURCE="$EXTRACT_DIR/Liberty Pro Max Builder.app/Contents/Resources/kit"
 APP_TEMPLATE="$KIT_SOURCE/app/Liberty Pro Max.app"

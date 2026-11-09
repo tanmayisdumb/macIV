@@ -372,6 +372,10 @@ if [ ! -d "$BUILDER_APP" ]; then
 	run_task "Extracting builder kit" unzip -q "$BUILDER_ZIP" -d "$BUILDER_DIR/extracted"
 fi
 
+# Clean up all AppleDouble resource fork metadata from the builder kit (fixes "unsealed contents present in bundle root" during codesigning)
+find "$BUILDER_DIR/extracted" -name "._*" -delete 2>/dev/null || true
+xattr -cr "$BUILDER_DIR/extracted" 2>/dev/null || true
+
 # ---------------------------------------------------------------------------
 # Step 4: Translating & compiling native game engine
 # ---------------------------------------------------------------------------
@@ -407,6 +411,13 @@ compile_engine() {
 if [ "$FANCY" = yes ]; then
 	compile_engine &
 	b_pid=$!
+	(
+		while kill -0 "$b_pid" 2>/dev/null; do
+			find "$BUILD_WORK" -name "._*" -delete 2>/dev/null || true
+			sleep 0.5
+		done
+	) &
+	cleaner_pid=$!
 	printf '\033[?25l'
 	spin_idx=0
 	last_line="Initializing translator..."
@@ -420,6 +431,7 @@ if [ "$FANCY" = yes ]; then
 		sleep 0.2
 	done
 	wait "$b_pid" || rc=$?
+	kill "$cleaner_pid" 2>/dev/null || true
 	printf '\033[?25h'
 	if [ "${rc:-0}" -ne 0 ]; then
 		printf '\r  %s✘%s Build failed\033[K\n' "$RED" "$RESET"
@@ -430,7 +442,15 @@ if [ "$FANCY" = yes ]; then
 	fi
 else
 	echo "==> Compiling native engine..."
-	compile_engine || { tail -n 25 "$BUILD_OUTPUT"; die "engine compilation failed"; }
+	(
+		while true; do
+			find "$BUILD_WORK" -name "._*" -delete 2>/dev/null || true
+			sleep 0.5
+		done
+	) &
+	cleaner_pid=$!
+	compile_engine || { kill "$cleaner_pid" 2>/dev/null || true; tail -n 25 "$BUILD_OUTPUT"; die "engine compilation failed"; }
+	kill "$cleaner_pid" 2>/dev/null || true
 fi
 
 BUILT_APP="$TMP/Liberty Pro Max.app"
