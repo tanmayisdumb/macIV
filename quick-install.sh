@@ -268,13 +268,25 @@ else
 			[ "$(basename "$cand")" = "$APP_NAME.app" ] && continue
 			c_lower="$(basename "$cand" | tr '[:upper:]' '[:lower:]')"
 			case "$c_lower" in
-				*gta*iv*|*gtaiv*|*gta4*|*gta*4*|*liberty*)
+				*gta*iv*|*gtaiv*|*gta4*|*gta*4*|*liberty*|*games*|*game*)
 					if ASSET_SRC="$(resolve_game_dir "$cand")"; then
 						ok "Using game files found in $ASSET_SRC"
 						break
 					fi
 					;;
 			esac
+		done
+	fi
+
+	# Generic fallback: check any folder in ~/Downloads for GTAIV.exe
+	if [ -z "$ASSET_SRC" ]; then
+		for cand in "$DL"/*; do
+			[ -d "$cand" ] || continue
+			[ "$(basename "$cand")" = "$APP_NAME.app" ] && continue
+			if ASSET_SRC="$(resolve_game_dir "$cand")"; then
+				ok "Using game files found in $ASSET_SRC"
+				break
+			fi
 		done
 	fi
 
