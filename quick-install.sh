@@ -509,15 +509,17 @@ fi
 
 if [ -f "$SCRIPT_DIR/src/macIV.icns" ]; then
 	cp "$SCRIPT_DIR/src/macIV.icns" "$APP/Contents/Resources/macIV.icns"
+	cp "$SCRIPT_DIR/src/macIV.icns" "$APP/Contents/Resources/AppIcon.icns"
 else
 	curl -fsSL "$RAW_BASE/src/macIV.icns" -o "$APP/Contents/Resources/macIV.icns" 2>/dev/null || true
+	cp "$APP/Contents/Resources/macIV.icns" "$APP/Contents/Resources/AppIcon.icns" 2>/dev/null || true
 fi
 
-/usr/libexec/PlistBuddy -c "Set :CFBundleName $APP_NAME" \
-	-c "Set :CFBundleDisplayName $APP_NAME" \
-	-c "Set :CFBundleExecutable macIV" \
-	-c "Set :CFBundleIconFile macIV" \
-	-c "Add :LSApplicationCategoryType string public.app-category.games" "$APP/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Set :CFBundleName $APP_NAME" "$APP/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $APP_NAME" "$APP/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Set :CFBundleExecutable macIV" "$APP/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string macIV" "$APP/Contents/Info.plist" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile macIV" "$APP/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Add :LSApplicationCategoryType string public.app-category.games" "$APP/Contents/Info.plist" 2>/dev/null || true
 
 # ---------------------------------------------------------------------------
 # Step 5: Baking game assets into app bundle
