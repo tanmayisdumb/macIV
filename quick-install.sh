@@ -430,16 +430,35 @@ step "Baking game assets into app bundle"
 mkdir -p "$GDATA"
 bake_files() {
 	cp -R "$ASSET_SRC/." "$GDATA/"
+	# If Complete Edition DLC folders (TLAD, TBoGT, update) exist in parent directory, include them
+	for ep in TLAD TBoGT update; do
+		if [ ! -d "$GDATA/$ep" ] && [ -d "$ASSET_SRC/../$ep" ]; then
+			cp -R "$ASSET_SRC/../$ep" "$GDATA/$ep"
+		fi
+	done
 }
 
 if [ "$FANCY" = yes ]; then
 	BAKE_TOTAL=$(du_bytes "$ASSET_SRC")
+	for ep in TLAD TBoGT update; do
+		if [ -d "$ASSET_SRC/../$ep" ]; then
+			BAKE_TOTAL=$(( BAKE_TOTAL + $(du_bytes "$ASSET_SRC/../$ep") ))
+		fi
+	done
 	bake_files &
 	watch_bytes $! "Copying game assets" "$BAKE_TOTAL" du_bytes "$GDATA" \
 		|| die "copying the game files failed"
 else
 	echo "==> Baking game files into the app..."
 	bake_files
+fi
+
+# Detect Complete Edition episodes
+EPISODES_FOUND=()
+[ -f "$GDATA/TLAD/setup2.xml" ] && EPISODES_FOUND+=("The Lost and Damned")
+[ -f "$GDATA/TBoGT/setup2.xml" ] && EPISODES_FOUND+=("The Ballad of Gay Tony")
+if [ ${#EPISODES_FOUND[@]} -gt 0 ]; then
+	ok "Complete Edition Episodes detected: ${EPISODES_FOUND[*]}"
 fi
 
 # Pre-configure GameFolder in user defaults
