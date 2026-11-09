@@ -1,0 +1,135 @@
+# macIV
+
+**GTA IV, native on Apple Silicon.** A build that translates the game's original x86 code
+statically to ARM64 and renders directly through **Apple Metal**. Runs fluidly at **100+ FPS** with
+native **Retina** and ultrawide resolutions, supports modern game controllers, activates macOS
+**Game Mode** automatically, and integrates over 100 physics, timing, and visual fixes from
+FusionFix and ZolikaPatch. One command turns your own copy of the game (PC v1.0.8.0) into a
+ready-to-play `Grand Theft Auto IV.app`. No Wine, CrossOver, or virtual machines needed.
+
+This repository hosts the **launcher, installer, and build tools only** — there are no proprietary game assets distributed here.
+
+> ⚠️ **This needs the classic GTA IV PC release (v1.0.8.0), not the modern Complete Edition launcher.**
+> The Steam Complete Edition can be easily downgraded to v1.0.8.0 in seconds using standard community downgraders (e.g. Clonk or Zolika Downgrader).
+
+---
+
+## Quick Install
+
+**You need:** an Apple Silicon Mac (M1, M2, M3, M4 or newer) running macOS 14 (Sonoma) or later with the free Apple Command Line Tools (`xcode-select --install`), and your own copy of **Grand Theft Auto IV for PC (v1.0.8.0)** — the folder containing `GTAIV.exe`, `pc/`, and `common/`.
+
+### 1. Run the one-liner in Terminal
+
+Open **Terminal** (`Cmd+Space`, type `Terminal`, press Enter), paste this line and press Enter:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/tanmayisdumb/macIV/main/quick-install.sh | bash
+```
+
+It automatically finds your game files (Steam install, existing app, or any GTA IV folder in `~/Downloads`), compiles the native Metal engine for your Apple Silicon Mac, configures display preferences, and bakes **Grand Theft Auto IV.app** directly into your Downloads folder.
+
+### 2. Play
+
+When Finder opens, **drag Grand Theft Auto IV into Applications** — or just double-click it to play right away!
+
+---
+
+## Custom Game Paths & Options
+
+### Using a non-Steam copy or custom folder?
+Add the path to your GTA IV folder (the folder containing `GTAIV.exe` and `pc/`) or any `.app` containing the files:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/tanmayisdumb/macIV/main/quick-install.sh | bash -s -- ~/Downloads/"Grand Theft Auto IV"
+```
+
+### Prefer a classic disk image?
+Add `--dmg` to produce a drag-to-Applications `Grand Theft Auto IV.dmg`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/tanmayisdumb/macIV/main/quick-install.sh | bash -s -- --dmg
+```
+
+### Upgrading?
+Run the same one-liner again at any time — it automatically reuses the game files already baked into your installed app without re-downloading or re-extracting assets.
+
+---
+
+## Direct Downloads
+
+| File | Description |
+|---|---|
+| [`macIV-macos-arm64.tar.gz`](https://raw.githubusercontent.com/tanmayisdumb/macIV/main/macIV-macos-arm64.tar.gz) | Standalone app bundle and runtime kit without game assets |
+| [`macIV-macos-arm64.zip`](https://raw.githubusercontent.com/tanmayisdumb/macIV/main/macIV-macos-arm64.zip) | Same standalone app bundle in `.zip` format |
+| [`quick-install.sh`](https://raw.githubusercontent.com/tanmayisdumb/macIV/main/quick-install.sh) | The interactive installer script run by the one-liner |
+| [`signtool-arm64.tar.gz`](https://raw.githubusercontent.com/tanmayisdumb/macIV/main/signtool-arm64.tar.gz) | Bundled ad-hoc code signer (`ldid`), ensuring zero Xcode dependency |
+| [`version.sha`](https://raw.githubusercontent.com/tanmayisdumb/macIV/main/version.sha) | SHA256 checksum of the native launcher binary |
+
+---
+
+## Legal
+
+`macIV` requires the files from your own legally purchased copy of Grand Theft Auto IV. No game assets, textures, or audio files are distributed here.
+
+`macIV` is an independent open-source project and is not affiliated with, sponsored by, or endorsed by Rockstar Games or Take-Two Interactive. Grand Theft Auto and Grand Theft Auto IV are trademarks of Take-Two Interactive Software, Inc.
+
+---
+
+## What's Changed in this Port
+
+The goal of `macIV` is a faithful, high-performance native Mac experience: authentic gameplay, look, and audio, powered by modern Apple Silicon hardware underneath.
+
+### 🗽 Authentic Name and Retina Icon
+- **Installed as `Grand Theft Auto IV.app` with an authentic 1024x1024 Retina icon** — created directly from high-resolution vector artwork. The app name on disk, in the menu bar, in Activity Monitor, and in the macOS Dock all match the official title.
+
+### ⚡ Rendering: Direct3D 9 → Apple Metal
+- Runs natively on Apple Silicon (`arm64`) through a specialized Metal renderer written specifically for GTA IV.
+- Multi-threaded command buffer encoding, geometry read in place from game memory, and multiple frames in flight.
+- Zero Rosetta 2 translation overhead, zero Wine translation layers.
+
+### 🏎️ High Frame Rate & ProMotion Support
+- **Uncapped Fluid Frame Rates**: Removes the legacy 30/60 FPS limits. Reaches 120+ FPS indoors and 60–100 FPS outdoors on M-series chips.
+- **ProMotion Synchronization**: Smooth frame pacing on MacBook Pro 120Hz Liquid Retina XDR displays without tearing or micro-stutters.
+- **TAA & MetalFX Upscaling**: Built-in support for Temporal Anti-Aliasing (TAA), SMAA, and Apple MetalFX spatial and temporal upscaling.
+
+### 🛠️ Over 100 Fixes from FusionFix & ZolikaPatch
+- **High FPS Physics Fixed**: Fixes motorcycle wheelies, boat buoyancy, vehicle suspension stiffness, and vehicle deformation bugs at frame rates above 30 FPS.
+- **Fixed Out-of-the-Box**: Fixes the infamous final mission helicopter climb QTE bug that plagued the PC port on modern multi-core processors.
+- **Visual Improvements**: Working searchlights on police helicopters, distant lights in Episodes from Liberty City, corrected vehicle headlights and coronas, fixed mirrors, and realistic water shaders.
+
+### 🎮 Modern Input & Controllers
+- **Native Game Controllers**: Out-of-the-box support for PlayStation DualSense / DualShock 4, Xbox Wireless, and Nintendo Switch Pro Controllers via Apple's `GameController.framework`.
+- **Full Keyboard & Mouse**: Smooth raw mouse camera tracking without acceleration jumps or cursor drift.
+
+### 🍎 macOS Integration
+- **Game Mode Automatic Activation**: Tagged with official game metadata (`LSApplicationCategoryType: public.app-category.games`). macOS automatically enables **Game Mode** in fullscreen, prioritizing CPU and GPU cores and doubling Bluetooth sampling rates for wireless controllers.
+- **Self-contained bundle**: All game files are baked into `Contents/Resources/GameData/`. Moving the `.app` moves the entire game without leaving scattered dependencies.
+- **Spaces & Mission Control Friendly**: Transitions smoothly into native macOS fullscreen spaces with seamless `Cmd+Tab` app switching.
+
+---
+
+## Building from Source
+
+To build `macIV.app` from scratch on macOS:
+
+```sh
+# Clone this repository
+git clone https://github.com/tanmayisdumb/macIV.git
+cd macIV
+
+# Build launcher, download runtime, and package archives
+./src/build.sh
+```
+
+The build script compiles the native C launcher (`src/macIV.c`), sets up the bundle skeleton, embeds the icon and runtime kit, cleans AppleDouble metadata, ad-hoc codesigns the bundle, and outputs `macIV-macos-arm64.tar.gz` and `macIV-macos-arm64.zip`.
+
+---
+
+## Credits
+
+- **[liberty-pro-max](https://github.com/Awis13/liberty-pro-max)** by [Awis13](https://github.com/Awis13) — Apple Silicon GTA IV static recompilation & Metal engine
+- **[x86recomp](https://github.com/JTM-rootstorm/x86recomp)** by [JTM-rootstorm](https://github.com/JTM-rootstorm) — Foundational x86 static binary recompiler
+- **[FusionFix](https://github.com/ThirteenAG/GTAIV.EFLC.FusionFix)** by ThirteenAG & contributors — Community physics, timing, and graphics fixes
+- **[ZolikaPatch](https://github.com/Zolika1351)** by Zolika1351 — Comprehensive GTA IV engine patches & gameplay fixes
+- **[macVC](https://github.com/gtamac/macVC)** by [gtamac](https://github.com/gtamac) — Project inspiration & architecture
+- **[Rockstar Games](https://www.rockstargames.com/)** — Original creators of Grand Theft Auto IV
