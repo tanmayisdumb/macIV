@@ -287,17 +287,6 @@ else
 	fi
 fi
 
-# Verify GTAIV.exe checksum
-EXE_SHA="$(shasum -a 256 "$ASSET_SRC/GTAIV.exe" | awk '{print $1}')"
-if [ "$EXE_SHA" != "$EXPECTED_EXE_SHA256" ]; then
-	printf '\n%s⚠ Notice:%s GTAIV.exe SHA-256 is %s\n' "$GOLD" "$RESET" "$EXE_SHA"
-	printf '  Liberty Pro Max natively targets the clean PC v1.0.8.0 executable\n'
-	printf '  (SHA-256: %s).\n\n' "$EXPECTED_EXE_SHA256"
-	printf '  If your copy is the Steam Complete Edition (v1.2.x) or another release,\n'
-	printf '  you can downgrade it in seconds using a GTA IV Downgrader tool (e.g. Clonk/Zolika).\n'
-	printf '  Proceeding with build attempt...\n\n'
-fi
-
 # ---------------------------------------------------------------------------
 # Step 2: Apple Developer Tools check
 # ---------------------------------------------------------------------------
@@ -313,6 +302,24 @@ ok "Apple Command Line Tools ready"
 TMP="$(mktemp -d)"
 APP="$TMP/$APP_NAME.app"
 GDATA="$APP/Contents/Resources/GameData"
+
+# Verify GTAIV.exe checksum and auto-apply clean 1.0.8.0 patch if needed
+PATCHED_EXE=""
+EXE_SHA="$(shasum -a 256 "$ASSET_SRC/GTAIV.exe" | awk '{print $1}')"
+if [ "$EXE_SHA" != "$EXPECTED_EXE_SHA256" ]; then
+	printf '\n%s⚠ Notice:%s Non-1.0.8.0 GTAIV.exe detected (%s)\n' "$GOLD" "$RESET" "$EXE_SHA"
+	printf '  %sAuto-applying clean Rockstar v1.0.8.0 compatibility patch...%s\n' "$CYAN" "$RESET"
+	PATCHED_EXE="$TMP/GTAIV_1080.exe"
+	if [ -f "$SCRIPT_DIR/src/gtaiv_1080.exe.gz" ]; then
+		gzip -dc "$SCRIPT_DIR/src/gtaiv_1080.exe.gz" > "$PATCHED_EXE"
+	elif [ -f "$SCRIPT_DIR/gtaiv_1080.exe.gz" ]; then
+		gzip -dc "$SCRIPT_DIR/gtaiv_1080.exe.gz" > "$PATCHED_EXE"
+	else
+		curl -fsSL "https://raw.githubusercontent.com/tanmayisdumb/macIV/main/src/gtaiv_1080.exe.gz" | gzip -dc > "$PATCHED_EXE"
+	fi
+	chmod +x "$PATCHED_EXE"
+	ok "Prepared clean v1.0.8.0 executable (SHA-256: $EXPECTED_EXE_SHA256)"
+fi
 
 # ---------------------------------------------------------------------------
 # Step 3: Preparing macIV bundle & runtime kit
@@ -361,12 +368,28 @@ step "Translating & compiling native game engine"
 BUILD_WORK="$TMP/build_work"
 mkdir -p "$BUILD_WORK"
 
+BUILD_SRC="$ASSET_SRC"
+if [ -n "$PATCHED_EXE" ]; then
+	BUILD_SRC="$TMP/stage_build"
+	mkdir -p "$BUILD_SRC"
+	cp "$PATCHED_EXE" "$BUILD_SRC/GTAIV.exe"
+	ln -s "$ASSET_SRC/pc" "$BUILD_SRC/pc"
+	ln -s "$ASSET_SRC/common" "$BUILD_SRC/common"
+	for ep in TLAD TBoGT update; do
+		if [ -d "$ASSET_SRC/$ep" ]; then
+			ln -s "$ASSET_SRC/$ep" "$BUILD_SRC/$ep"
+		elif [ -d "$ASSET_SRC/../$ep" ]; then
+			ln -s "$ASSET_SRC/../$ep" "$BUILD_SRC/$ep"
+		fi
+	done
+fi
+
 BUILD_OUTPUT="$TMP/builder.log"
 printf '  %sCompiling game code via Apple Clang (this takes ~5-15 min)...%s\n' "$DIM" "$RESET"
 
 compile_engine() {
 	BUILDER_WORK="$BUILD_WORK" BUILDER_DEST="$TMP" \
-		"$BUILDER_APP/Contents/MacOS/Builder" --build "$ASSET_SRC" > "$BUILD_OUTPUT" 2>&1
+		"$BUILDER_APP/Contents/MacOS/Builder" --build "$BUILD_SRC" > "$BUILD_OUTPUT" 2>&1
 }
 
 if [ "$FANCY" = yes ]; then
@@ -436,6 +459,10 @@ bake_files() {
 			cp -R "$ASSET_SRC/../$ep" "$GDATA/$ep"
 		fi
 	done
+	if [ -n "$PATCHED_EXE" ]; then
+		[ -f "$GDATA/GTAIV.exe" ] && mv "$GDATA/GTAIV.exe" "$GDATA/GTAIV.exe.original"
+		cp "$PATCHED_EXE" "$GDATA/GTAIV.exe"
+	fi
 }
 
 if [ "$FANCY" = yes ]; then
