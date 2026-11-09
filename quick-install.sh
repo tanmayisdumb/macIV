@@ -376,6 +376,34 @@ fi
 find "$BUILDER_DIR/extracted" -name "._*" -delete 2>/dev/null || true
 xattr -cr "$BUILDER_DIR/extracted" 2>/dev/null || true
 
+# Apply Complete Edition script compatibility patch (prevents SCRT70 / 747217401 when pulling out phone)
+MANIFEST="$BUILDER_APP/Contents/Resources/kit/manifest/gtaiv.manifest"
+EPISODES_CPP="$BUILDER_APP/Contents/Resources/kit/src/episodes.cpp"
+if [ -f "$MANIFEST" ] && ! grep -q "008AE060" "$MANIFEST"; then
+	echo "replace 008AE060 RegisterNatives   # the Complete Edition scripts' multiplayer native, answered 0 (SCRT70 without it)" >> "$MANIFEST"
+fi
+if [ -f "$EPISODES_CPP" ] && ! grep -q "008AE060" "$EPISODES_CPP"; then
+	python3 -c "
+with open('$EPISODES_CPP', 'r') as f:
+    c = f.read()
+c = c.replace('void f_0085A5F0_lifted(Ctx& c);', 'void f_0085A5F0_lifted(Ctx& c);\nvoid f_008AE060_lifted(Ctx& c);')
+hook = '''
+void f_008AE060(Ctx& c) {
+  constexpr uint32_t kMultiplayerNative = 0x2C89A1F9;
+  constexpr gaddr kIsXbox360Version = 0x00B0EA50;
+  constexpr gaddr kRegisterNative = 0x00626B40;
+  f_008AE060_lifted(c);
+  if (!(CallGuest(c, kRegisterNative, {kMultiplayerNative, kIsXbox360Version}) & 0xFF))
+    WarnF(\"gtaiv: natives: %08X not added\\n\", kMultiplayerNative);
+}
+
+}  // namespace recomp::gen'''
+c = c.replace('}  // namespace recomp::gen', hook)
+with open('$EPISODES_CPP', 'w') as f:
+    f.write(c)
+" 2>/dev/null || true
+fi
+
 # ---------------------------------------------------------------------------
 # Step 4: Translating & compiling native game engine
 # ---------------------------------------------------------------------------
