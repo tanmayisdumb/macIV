@@ -564,8 +564,10 @@ if [ ${#EPISODES_FOUND[@]} -gt 0 ]; then
 	ok "Complete Edition Episodes detected: ${EPISODES_FOUND[*]}"
 fi
 
-# Pre-configure GameFolder in user defaults
+# Pre-configure GameFolder and performance defaults
 defaults write io.github.awis13.liberty-pro-max GameFolder "$GDATA" 2>/dev/null || true
+defaults write io.github.awis13.liberty-pro-max AntiAliasing -int 4 2>/dev/null || true
+defaults write io.github.awis13.liberty-pro-max VerticalSync -int 1 2>/dev/null || true
 mkdir -p "$HOME/Library/Application Support/gtaiv"
 
 # ---------------------------------------------------------------------------

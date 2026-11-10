@@ -31,14 +31,28 @@ static void mkdir_p(const char *path) {
     mkdir(tmp, 0755);
 }
 
-static void set_game_folder_pref(const char *folder_path) {
+static void set_default_preferences(const char *folder_path) {
     CFStringRef key = CFSTR("GameFolder");
     CFStringRef val = CFStringCreateWithCString(kCFAllocatorDefault, folder_path, kCFStringEncodingUTF8);
     if (val) {
         CFPreferencesSetAppValue(key, val, PREF_DOMAIN);
-        CFPreferencesAppSynchronize(PREF_DOMAIN);
         CFRelease(val);
     }
+
+    // Default Anti-Aliasing to SMAA + MetalFX spatial (index 4) if not already configured
+    CFPropertyListRef cur_aa = CFPreferencesCopyAppValue(CFSTR("AntiAliasing"), PREF_DOMAIN);
+    if (!cur_aa) {
+        int default_aa = 4;
+        CFNumberRef aa_num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &default_aa);
+        if (aa_num) {
+            CFPreferencesSetAppValue(CFSTR("AntiAliasing"), aa_num, PREF_DOMAIN);
+            CFRelease(aa_num);
+        }
+    } else {
+        CFRelease(cur_aa);
+    }
+
+    CFPreferencesAppSynchronize(PREF_DOMAIN);
 }
 
 static void ensure_user_directories(void) {
@@ -105,7 +119,8 @@ int main(int argc, char *argv[]) {
 
     if (has_baked_data) {
         setenv("GTAIV_GAME_DIR", gamedata_path, 1);
-        set_game_folder_pref(gamedata_path);
+        setenv("RECOMP_UPSCALER", "metalfx-spatial", 0);
+        set_default_preferences(gamedata_path);
     }
 
     // Check if the engine binary exists
