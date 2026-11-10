@@ -574,6 +574,15 @@ if [ ${#EPISODES_FOUND[@]} -gt 0 ]; then
 	ok "Complete Edition Episodes detected: ${EPISODES_FOUND[*]}"
 fi
 
+# Ensure commandline.txt exists to lift 32-bit texture and memory restrictions
+if [ ! -f "$GDATA/commandline.txt" ]; then
+	cat << 'EOF' > "$GDATA/commandline.txt"
+-norestrictions
+-nomemrestrict
+-availablevidmem 2047
+EOF
+fi
+
 # Pre-configure GameFolder and performance defaults
 defaults write io.github.awis13.liberty-pro-max GameFolder "$GDATA" 2>/dev/null || true
 defaults write io.github.awis13.liberty-pro-max AntiAliasing -int 4 2>/dev/null || true

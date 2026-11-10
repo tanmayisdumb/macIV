@@ -121,6 +121,17 @@ int main(int argc, char *argv[]) {
         setenv("GTAIV_GAME_DIR", gamedata_path, 1);
         setenv("RECOMP_UPSCALER", "metalfx-spatial", 0);
         set_default_preferences(gamedata_path);
+
+        // Ensure commandline.txt exists with default modern memory settings (-norestrictions, -nomemrestrict, -availablevidmem 2047)
+        char cmdline_path[PATH_MAX];
+        snprintf(cmdline_path, sizeof(cmdline_path), "%s/commandline.txt", gamedata_path);
+        if (!file_exists(cmdline_path)) {
+            FILE *cf = fopen(cmdline_path, "w");
+            if (cf) {
+                fputs("-norestrictions\n-nomemrestrict\n-availablevidmem 2047\n", cf);
+                fclose(cf);
+            }
+        }
     }
 
     // Check if the engine binary exists
