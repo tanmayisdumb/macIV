@@ -9,14 +9,14 @@ ready-to-play `Grand Theft Auto IV.app`. No Wine, CrossOver, or virtual machines
 
 This repository hosts the **launcher, installer, and build tools only** — there are no proprietary game assets distributed here.
 
-> ⚠️ **This needs the classic GTA IV PC release (v1.0.8.0), not the modern Complete Edition launcher.**
-> The Steam Complete Edition can be easily downgraded to v1.0.8.0 in seconds using standard community downgraders (e.g. Clonk or Zolika Downgrader).
+> 💡 **Works directly with Steam Complete Edition or classic v1.0.8.0!**
+> You do **not** need to manually downgrade your game. If you point the installer to your modern Steam Complete Edition folder (`v1.2.0.x`), it automatically applies a clean v1.0.8.0 compatibility patch during the build process while preserving all your Complete Edition assets, radio stations, and *Episodes from Liberty City* (*The Lost and Damned* & *The Ballad of Gay Tony*) DLCs.
 
 ---
 
 ## Quick Install
 
-**You need:** an Apple Silicon Mac (M1, M2, M3, M4 or newer) running macOS 14 (Sonoma) or later with the free Apple Command Line Tools (`xcode-select --install`), and your own copy of **Grand Theft Auto IV for PC (v1.0.8.0)** — the folder containing `GTAIV.exe`, `pc/`, and `common/`.
+**You need:** an Apple Silicon Mac (M1, M2, M3, M4 or newer) running macOS 14 (Sonoma) or later with the free Apple Command Line Tools (`xcode-select --install`), and your own copy of **Grand Theft Auto IV for PC (Steam Complete Edition or v1.0.8.0)** — the folder containing `GTAIV.exe`, `pc/`, and `common/`.
 
 ### 1. Run the one-liner in Terminal
 
@@ -96,6 +96,11 @@ The goal of `macIV` is a faithful, high-performance native Mac experience: authe
 - **High FPS Physics Fixed**: Fixes motorcycle wheelies, boat buoyancy, vehicle suspension stiffness, and vehicle deformation bugs at frame rates above 30 FPS.
 - **Fixed Out-of-the-Box**: Fixes the infamous final mission helicopter climb QTE bug that plagued the PC port on modern multi-core processors.
 - **Visual Improvements**: Working searchlights on police helicopters, distant lights in Episodes from Liberty City, corrected vehicle headlights and coronas, fixed mirrors, and realistic water shaders.
+
+### 🎮 Steam Complete Edition & Episodes from Liberty City
+- **Zero Manual Downgrading Required**: The installer automatically detects modern Steam Complete Edition (`v1.2.0.x`) and applies a clean v1.0.8.0 compatibility patch on the fly.
+- **Includes All DLCs**: Automatically detects and bakes *The Lost and Damned* (`TLAD`) and *The Ballad of Gay Tony* (`TBoGT`) into the standalone app bundle.
+- **Complete Edition Script Crash Fixed (`SCRT70`)**: Neutralizes the fatal phone crash (`747217401`) caused by Complete Edition script files calling unregistered multiplayer natives.
 
 ### 🎮 Modern Input & Controllers
 - **Native Game Controllers**: Out-of-the-box support for PlayStation DualSense / DualShock 4, Xbox Wireless, and Nintendo Switch Pro Controllers via Apple's `GameController.framework`.
