@@ -5,8 +5,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-BUILDER_URL="https://github.com/Awis13/liberty-pro-max/releases/download/v0.3.5-beta/Liberty.Pro.Max.Builder.zip"
-BUILDER_SHA256="c01c93b58885b0f0fa8a1112757f0cdb7b96e03e0f58e90ddd1cdf9108a76948"
+BUILDER_URL="https://github.com/Awis13/liberty-pro-max/releases/download/v0.4.0-beta/Liberty.Pro.Max.Builder.zip"
+BUILDER_SHA256="1473944340c23876fc7ac468c1d044a489a2611bff07c2d90f6d3859d12a0163"
 
 echo "==> Building macIV..."
 
@@ -50,6 +50,7 @@ ACTUAL_SHA="$(shasum -a 256 "$ZIP_FILE" | awk '{print $1}')"
 if [ "$ACTUAL_SHA" != "$BUILDER_SHA256" ]; then
     echo "Warning: Checksum mismatch ($ACTUAL_SHA vs $BUILDER_SHA256), re-downloading..."
     rm -f "$ZIP_FILE"
+    rm -rf "$CACHE_DIR/extracted"
     curl -fsSL "$BUILDER_URL" -o "$ZIP_FILE"
 fi
 
@@ -122,9 +123,9 @@ cat << 'PLIST' > "$APP_DIR/Contents/Info.plist"
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3.5</string>
+	<string>0.4.0</string>
 	<key>CFBundleVersion</key>
-	<string>0.3.5</string>
+	<string>0.4.0</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
 	<key>LSMinimumSystemVersion</key>

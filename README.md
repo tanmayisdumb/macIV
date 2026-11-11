@@ -106,6 +106,11 @@ The goal of `macIV` is a faithful, high-performance native Mac experience: authe
 - **Native Game Controllers**: Out-of-the-box support for PlayStation DualSense / DualShock 4, Xbox Wireless, and Nintendo Switch Pro Controllers via Apple's `GameController.framework`.
 - **Full Keyboard & Mouse**: Smooth raw mouse camera tracking without acceleration jumps or cursor drift.
 
+### 📻 Independence FM (Custom User Music)
+- **Play Your Own MP3s**: Drop `.mp3` tracks (between 20 seconds and 2 hours long) into:
+  `~/Library/Application Support/gtaiv/drive_c/Documents and Settings/Player/My Documents/Rockstar Games/GTA IV/User Music`
+- Go to **Pause Menu → Audio → Complete Scan** in-game, and your custom tracks will play on **Independence FM** with authentic DJ banter, radio commentary, and commercial breaks.
+
 ### 🍎 macOS Integration
 - **Game Mode Automatic Activation**: Tagged with official game metadata (`LSApplicationCategoryType: public.app-category.games`). macOS automatically enables **Game Mode** in fullscreen, prioritizing CPU and GPU cores and doubling Bluetooth sampling rates for wireless controllers.
 - **Self-contained bundle**: All game files are baked into `Contents/Resources/GameData/`. Moving the `.app` moves the entire game without leaving scattered dependencies.
