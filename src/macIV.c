@@ -112,6 +112,11 @@ int main(int argc, char *argv[]) {
         setenv("GTAIV_LOG", default_log, 0);
     }
 
+    // Limit shared GPU vertex/index buffer heap to 256 MB (down from 512 MB).
+    // This preserves an extra 256 MB of 32-bit guest address space for game streaming,
+    // preventing RESC10 ("Out of video memory") crashes when flying or in dense scenes.
+    setenv("GTAIV_GPU_HEAP_MB", "256", 0);
+
     // Check if game data is baked inside the bundle
     char gtaiv_exe[PATH_MAX];
     snprintf(gtaiv_exe, sizeof(gtaiv_exe), "%s/GTAIV.exe", gamedata_path);
