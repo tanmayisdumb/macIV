@@ -92,9 +92,10 @@ cp "$EXTRACT_DIR/Liberty Pro Max Builder.app/Contents/MacOS/Builder" "$APP_DIR/C
 # Copy launcher and icon
 cp "$SCRIPT_DIR/macIV" "$APP_DIR/Contents/MacOS/macIV"
 cp "$ICON_PATH" "$APP_DIR/Contents/Resources/macIV.icns"
-if [ -f "$SCRIPT_DIR/gtaiv_1080.exe.gz" ]; then
-    echo "--> Bundling clean 1.0.8.0 executable patch..."
-    cp "$SCRIPT_DIR/gtaiv_1080.exe.gz" "$APP_DIR/Contents/Resources/gtaiv_1080.exe.gz"
+if [ -f "$SCRIPT_DIR/ce_to_1080.patch" ]; then
+    echo "--> Bundling Complete Edition delta patch & downgrader..."
+    cp "$SCRIPT_DIR/ce_to_1080.patch" "$APP_DIR/Contents/Resources/ce_to_1080.patch"
+    cp "$SCRIPT_DIR/downgrade.sh" "$APP_DIR/Contents/Resources/downgrade.sh"
 fi
 chmod +x "$APP_DIR/Contents/MacOS/macIV"
 

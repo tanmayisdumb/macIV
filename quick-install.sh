@@ -320,16 +320,20 @@ PATCHED_EXE=""
 EXE_SHA="$(shasum -a 256 "$ASSET_SRC/GTAIV.exe" | awk '{print $1}')"
 if [ "$EXE_SHA" != "$EXPECTED_EXE_SHA256" ]; then
 	printf '\n%s⚠ Notice:%s Non-1.0.8.0 GTAIV.exe detected (%s)\n' "$GOLD" "$RESET" "$EXE_SHA"
-	printf '  %sAuto-applying clean Rockstar v1.0.8.0 compatibility patch...%s\n' "$CYAN" "$RESET"
+	printf '  %sAuto-converting Complete Edition to clean Rockstar v1.0.8.0 via binary delta patch...%s\n' "$CYAN" "$RESET"
 	PATCHED_EXE="$TMP/GTAIV_1080.exe"
-	if [ -f "$SCRIPT_DIR/src/gtaiv_1080.exe.gz" ]; then
-		gzip -dc "$SCRIPT_DIR/src/gtaiv_1080.exe.gz" > "$PATCHED_EXE"
-	elif [ -f "$SCRIPT_DIR/gtaiv_1080.exe.gz" ]; then
-		gzip -dc "$SCRIPT_DIR/gtaiv_1080.exe.gz" > "$PATCHED_EXE"
-	else
-		curl -fsSL "https://raw.githubusercontent.com/tanmayisdumb/macIV/main/src/gtaiv_1080.exe.gz" | gzip -dc > "$PATCHED_EXE"
+	PATCH_FILE=""
+	for p in "$SCRIPT_DIR/src/ce_to_1080.patch" "$SCRIPT_DIR/ce_to_1080.patch"; do
+		if [ -f "$p" ]; then PATCH_FILE="$p"; break; fi
+	done
+	if [ -z "$PATCH_FILE" ]; then
+		PATCH_FILE="$TMP/ce_to_1080.patch"
+		curl -fsSL "https://raw.githubusercontent.com/tanmayisdumb/macIV/main/src/ce_to_1080.patch" -o "$PATCH_FILE"
 	fi
+	/usr/bin/bspatch "$ASSET_SRC/GTAIV.exe" "$PATCHED_EXE" "$PATCH_FILE" || die "Failed to apply Complete Edition compatibility patch"
 	chmod +x "$PATCHED_EXE"
+	PATCHED_SHA="$(shasum -a 256 "$PATCHED_EXE" | awk '{print $1}')"
+	[ "$PATCHED_SHA" = "$EXPECTED_EXE_SHA256" ] || die "Compatibility patch verification failed (got $PATCHED_SHA, expected $EXPECTED_EXE_SHA256)"
 	ok "Prepared clean v1.0.8.0 executable (SHA-256: $EXPECTED_EXE_SHA256)"
 fi
 
