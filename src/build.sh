@@ -5,8 +5,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-BUILDER_URL="https://github.com/Awis13/liberty-pro-max/releases/download/v0.4.0-beta/Liberty.Pro.Max.Builder.zip"
-BUILDER_SHA256="1473944340c23876fc7ac468c1d044a489a2611bff07c2d90f6d3859d12a0163"
+BUILDER_URL="https://github.com/Awis13/liberty-pro-max/releases/download/v0.4.1-beta/Liberty.Pro.Max.Builder.zip"
+BUILDER_SHA256="80cd1bfddc1b899cff6030ab511dca01a05cd736882322cb46ce7ee816d64bb4"
 
 echo "==> Building macIV..."
 
@@ -123,9 +123,9 @@ cat << 'PLIST' > "$APP_DIR/Contents/Info.plist"
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.4.0</string>
+	<string>0.4.1</string>
 	<key>CFBundleVersion</key>
-	<string>0.4.0</string>
+	<string>0.4.1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
 	<key>LSMinimumSystemVersion</key>

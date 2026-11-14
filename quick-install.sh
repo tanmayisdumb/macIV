@@ -17,8 +17,8 @@ set -euo pipefail
 
 RELEASE_URL="https://raw.githubusercontent.com/tanmayisdumb/macIV/main/macIV-macos-arm64.tar.gz"
 SIGNTOOL_URL="https://raw.githubusercontent.com/tanmayisdumb/macIV/main/signtool-arm64.tar.gz"
-BUILDER_URL="https://github.com/Awis13/liberty-pro-max/releases/download/v0.4.0-beta/Liberty.Pro.Max.Builder.zip"
-BUILDER_SHA256="1473944340c23876fc7ac468c1d044a489a2611bff07c2d90f6d3859d12a0163"
+BUILDER_URL="https://github.com/Awis13/liberty-pro-max/releases/download/v0.4.1-beta/Liberty.Pro.Max.Builder.zip"
+BUILDER_SHA256="80cd1bfddc1b899cff6030ab511dca01a05cd736882322cb46ce7ee816d64bb4"
 EXPECTED_EXE_SHA256="3d90e7c516fa450ca002e5031e62c0f66b404590f33e6cc9793b0da4fffbfd0f"
 
 DL="$HOME/Downloads"
