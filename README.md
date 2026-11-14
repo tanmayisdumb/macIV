@@ -1,4 +1,4 @@
-# macIV
+# macIV: Grand Theft Auto IV for macOS (Apple Silicon Native Port)
 
 **GTA IV, native on Apple Silicon.** A build that translates the game's original x86 code
 statically to ARM64 and renders directly through **Apple Metal**. Runs fluidly at **100+ FPS** with
@@ -31,6 +31,50 @@ It automatically finds your game files (Steam install, existing app, or any GTA 
 ### 2. Play
 
 When Finder opens, **drag Grand Theft Auto IV into Applications** — or just double-click it to play right away!
+
+---
+
+## 📥 Downloading from Steam on macOS
+
+Because Steam for Mac does not let you install Windows games directly through the Steam GUI, here are the two easiest ways to download your legitimate PC files directly on macOS:
+
+### Option A: Automatic Download via SteamCMD (Recommended)
+SteamCMD downloads all base game files and DLC episodes pre-merged with zero manual effort:
+```sh
+# 1. Install SteamCMD (via Homebrew)
+brew install steamcmd
+
+# 2. Download GTA IV Complete Edition Windows files directly to your Mac
+steamcmd +@sSteamCmdForcePlatformType windows +login <YOUR_STEAM_USERNAME> +app_update 12210 validate +quit
+```
+Once finished, run the one-line `quick-install.sh`—it automatically detects the files in `~/Library/Application Support/Steam/steamapps/common/Grand Theft Auto IV`.
+
+### Option B: Manual Steam Console (`download_depot`)
+If you download depots manually through the Steam client console (`steam://open/console`):
+* Base game: `download_depot 12210 12211`
+* Episodes: `download_depot 12210 12212`
+
+> ⚠️ **macOS Finder Merging Warning:** When merging folders with the same name, Finder asks *"Do you want to Replace or Merge?"*. Never click "Replace" or you will accidentally delete essential game files!
+>
+> `quick-install.sh` automatically detects separate depots sitting in `~/Library/Application Support/Steam/steamapps/content/app_12210/` and merges them during the build process with zero manual moving required.
+>
+> If you prefer to manually merge them into a single folder, do it safely via Terminal:
+> ```sh
+> mkdir -p ~/Downloads/GTAIV
+> cp -R ~/Library/Application\ Support/Steam/steamapps/content/app_12210/depot_12211/. ~/Downloads/GTAIV/
+> cp -R ~/Library/Application\ Support/Steam/steamapps/content/app_12210/depot_12212/. ~/Downloads/GTAIV/
+> ```
+>
+> Your merged folder structure will look like:
+> ```text
+> GTAIV/
+> ├── GTAIV/ (or root)
+> │   ├── GTAIV.exe
+> │   ├── pc/
+> │   └── common/
+> ├── TLAD/          (The Lost and Damned)
+> └── TBoGT/         (The Ballad of Gay Tony)
+> ```
 
 ---
 

@@ -31,6 +31,8 @@ STEAM_SRCS=(
 	"$HOME/Library/Application Support/Steam/steamapps/common/Grand Theft Auto IV"
 	"$HOME/Library/Application Support/Steam/steamapps/common/grand theft auto iv/GTAIV"
 	"$HOME/Library/Application Support/Steam/steamapps/common/grand theft auto iv"
+	"$HOME/Library/Application Support/Steam/steamapps/content/app_12210/depot_12211/GTAIV"
+	"$HOME/Library/Application Support/Steam/steamapps/content/app_12210/depot_12211"
 )
 
 # ---------------------------------------------------------------------------
@@ -220,6 +222,8 @@ resolve_game_dir() {
 		for dir in \
 			"$root" \
 			"$root/GTAIV" \
+			"$root/depot_12211/GTAIV" \
+			"$root/depot_12211" \
 			"$root/Contents/Resources/GameData" \
 			"$root/Contents/SharedSupport/prefix/drive_c/Program Files (x86)/Steam/steamapps/common/Grand Theft Auto IV/GTAIV" \
 			"$root/Contents/SharedSupport/prefix/drive_c/Program Files/Rockstar Games/Grand Theft Auto IV"; do
@@ -439,6 +443,10 @@ if [ -n "$PATCHED_EXE" ]; then
 			ln -s "$ASSET_SRC/$ep" "$BUILD_SRC/$ep"
 		elif [ -d "$ASSET_SRC/../$ep" ]; then
 			ln -s "$ASSET_SRC/../$ep" "$BUILD_SRC/$ep"
+		elif [ -d "$ASSET_SRC/../../depot_12212/$ep" ]; then
+			ln -s "$ASSET_SRC/../../depot_12212/$ep" "$BUILD_SRC/$ep"
+		elif [ -d "$ASSET_SRC/../depot_12212/$ep" ]; then
+			ln -s "$ASSET_SRC/../depot_12212/$ep" "$BUILD_SRC/$ep"
 		fi
 	done
 fi
@@ -544,10 +552,16 @@ step "Baking game assets into app bundle"
 mkdir -p "$GDATA"
 bake_files() {
 	cp -R "$ASSET_SRC/." "$GDATA/"
-	# If Complete Edition DLC folders (TLAD, TBoGT, update) exist in parent directory, include them
+	# If Complete Edition DLC folders (TLAD, TBoGT, update) exist in parent directory or sibling depot, include them
 	for ep in TLAD TBoGT update; do
-		if [ ! -d "$GDATA/$ep" ] && [ -d "$ASSET_SRC/../$ep" ]; then
-			cp -R "$ASSET_SRC/../$ep" "$GDATA/$ep"
+		if [ ! -d "$GDATA/$ep" ]; then
+			if [ -d "$ASSET_SRC/../$ep" ]; then
+				cp -R "$ASSET_SRC/../$ep" "$GDATA/$ep"
+			elif [ -d "$ASSET_SRC/../../depot_12212/$ep" ]; then
+				cp -R "$ASSET_SRC/../../depot_12212/$ep" "$GDATA/$ep"
+			elif [ -d "$ASSET_SRC/../depot_12212/$ep" ]; then
+				cp -R "$ASSET_SRC/../depot_12212/$ep" "$GDATA/$ep"
+			fi
 		fi
 	done
 	if [ -n "$PATCHED_EXE" ]; then
@@ -561,6 +575,10 @@ if [ "$FANCY" = yes ]; then
 	for ep in TLAD TBoGT update; do
 		if [ -d "$ASSET_SRC/../$ep" ]; then
 			BAKE_TOTAL=$(( BAKE_TOTAL + $(du_bytes "$ASSET_SRC/../$ep") ))
+		elif [ -d "$ASSET_SRC/../../depot_12212/$ep" ]; then
+			BAKE_TOTAL=$(( BAKE_TOTAL + $(du_bytes "$ASSET_SRC/../../depot_12212/$ep") ))
+		elif [ -d "$ASSET_SRC/../depot_12212/$ep" ]; then
+			BAKE_TOTAL=$(( BAKE_TOTAL + $(du_bytes "$ASSET_SRC/../depot_12212/$ep") ))
 		fi
 	done
 	bake_files &
