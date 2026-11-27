@@ -103,6 +103,9 @@ hook 0085B189 0085B18B   # savegame: bypass file size check against header
 hook 0085B450 0085B453   # savegame: bypass total bytes read check
 EOF
     fi
+    if ! grep -q "007D8C44" "$MANIFEST"; then
+        echo "hook 007D8C44 007D8C4B   # savegame: skip the saved radio state (converted Complete Edition saves)" >> "$MANIFEST"
+    fi
 fi
 
 if [ -f "$EPISODES_CPP" ]; then
@@ -173,6 +176,24 @@ void hook_0085B450(Ctx& c) {
         with open(path, 'w') as f:
             f.write(c)
 EOF
+    python3 - "$COMMUNITY_CPP" << 'EOF'
+import sys
+path = sys.argv[1]
+with open(path, 'r') as f:
+    c = f.read()
+if "hook_007D8C44" not in c:
+    hooks = '''
+// Savegame: the radio block is read and discarded (as with the radio flag clear)
+// so converted Complete Edition saves, whose radio state layout differs, load.
+void hook_007D8C44(Ctx& c) { CmpFlags<1>(c, 0, 0); }
+
+}  // namespace recomp::gen'''
+    idx = c.rfind('}  // namespace recomp::gen')
+    if idx != -1:
+        c = c[:idx] + hooks + c[idx+len('}  // namespace recomp::gen'):]
+        with open(path, 'w') as f:
+            f.write(c)
+EOF
 fi
 
 # Copy Builder app binary for headless / GUI builds
@@ -195,6 +216,11 @@ elif [ -f "$ROOT_DIR/tools/fix_save.py" ]; then
     echo "--> Bundling savegame repair tool..."
     cp "$ROOT_DIR/tools/fix_save.py" "$APP_DIR/Contents/Resources/fix_save.py"
     chmod +x "$APP_DIR/Contents/Resources/fix_save.py"
+fi
+if [ -f "$ROOT_DIR/tools/convert_ce_save.py" ]; then
+    echo "--> Bundling Complete Edition save converter..."
+    cp "$ROOT_DIR/tools/convert_ce_save.py" "$APP_DIR/Contents/Resources/convert_ce_save.py"
+    chmod +x "$APP_DIR/Contents/Resources/convert_ce_save.py"
 fi
 chmod +x "$APP_DIR/Contents/MacOS/macIV"
 
