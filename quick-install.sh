@@ -501,6 +501,36 @@ void hook_0085B450(Ctx& c) {
 EOF
 fi
 
+# Steam Complete Edition save support: the v1.0.8.0 code rejects a save when any
+# block's size differs from its own layout. tools/convert_ce_save.py rewrites
+# Complete Edition saves into that layout (Radar blip names, Stats radio timers,
+# Radio state); the radio state layout differs, so the engine skips the saved
+# radio state (the same path v1.0.8.0 takes with the radio flag clear).
+if [ -f "$MANIFEST" ] && ! grep -q "007D8C44" "$MANIFEST"; then
+	echo "hook 007D8C44 007D8C4B   # savegame: skip the saved radio state (converted Complete Edition saves)" >> "$MANIFEST"
+fi
+
+if [ -f "$COMMUNITY_CPP" ]; then
+	python3 - "$COMMUNITY_CPP" << 'EOF'
+import sys
+path = sys.argv[1]
+with open(path, 'r') as f:
+    c = f.read()
+if "hook_007D8C44" not in c:
+    hooks = '''
+// Savegame: the radio block is read and discarded (as with the radio flag clear)
+// so converted Complete Edition saves, whose radio state layout differs, load.
+void hook_007D8C44(Ctx& c) { CmpFlags<1>(c, 0, 0); }
+
+}  // namespace recomp::gen'''
+    idx = c.rfind('}  // namespace recomp::gen')
+    if idx != -1:
+        c = c[:idx] + hooks + c[idx+len('}  // namespace recomp::gen'):]
+        with open(path, 'w') as f:
+            f.write(c)
+EOF
+fi
+
 # ---------------------------------------------------------------------------
 # Step 4: Translating & compiling native game engine
 # ---------------------------------------------------------------------------
@@ -673,6 +703,14 @@ else
 fi
 chmod +x "$APP/Contents/Resources/fix_save.py" 2>/dev/null || true
 
+# Bundle the Complete Edition save converter
+if [ -f "$SCRIPT_DIR/tools/convert_ce_save.py" ]; then
+	cp "$SCRIPT_DIR/tools/convert_ce_save.py" "$APP/Contents/Resources/convert_ce_save.py"
+else
+	curl -fsSL "$RAW_BASE/tools/convert_ce_save.py" -o "$APP/Contents/Resources/convert_ce_save.py" 2>/dev/null || true
+fi
+chmod +x "$APP/Contents/Resources/convert_ce_save.py" 2>/dev/null || true
+
 if [ -f "$SCRIPT_DIR/src/macIV.icns" ]; then
 	cp "$SCRIPT_DIR/src/macIV.icns" "$APP/Contents/Resources/macIV.icns"
 	cp "$SCRIPT_DIR/src/macIV.icns" "$APP/Contents/Resources/AppIcon.icns"
@@ -755,6 +793,14 @@ defaults write io.github.awis13.liberty-pro-max GameFolder "$GDATA" 2>/dev/null 
 defaults write io.github.awis13.liberty-pro-max AntiAliasing -int 4 2>/dev/null || true
 defaults write io.github.awis13.liberty-pro-max VerticalSync -int 1 2>/dev/null || true
 mkdir -p "$HOME/Library/Application Support/gtaiv"
+
+# Convert any Steam Complete Edition saves already in the save folder to the
+# v1.0.8.0 layout (already converted or native saves are left untouched; the
+# originals are kept in savegames/ce_saves_backup).
+SAVE_DIR="$HOME/Library/Application Support/gtaiv/drive_c/Documents and Settings/Player/Local Settings/Application Data/Rockstar Games/GTA IV/savegames/user_ee000000deadc0de"
+if [ -d "$SAVE_DIR" ] && [ -f "$APP/Contents/Resources/convert_ce_save.py" ]; then
+	python3 "$APP/Contents/Resources/convert_ce_save.py" "$SAVE_DIR" || true
+fi
 
 # ---------------------------------------------------------------------------
 # Step 6: Signing the app & finalizing

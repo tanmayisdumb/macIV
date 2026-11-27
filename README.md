@@ -160,6 +160,10 @@ The goal of `macIV` is a faithful, high-performance native Mac experience: authe
 - **Automatic CRC & Size Repair on Launch**: Fixes the infamous *"Load failed, check your hard drive and try again"* error. `macIV` automatically validates, recalculates CRC32 checksums, updates header sizes, and appends missing XLive container footers for any save placed in your save directory:
   `~/Library/Application Support/gtaiv/drive_c/Documents and Settings/Player/Local Settings/Application Data/Rockstar Games/GTA IV/savegames/user_ee000000deadc0de`
 - **Engine-Level Check Bypass (ZolikaPatch Parity)**: Native engine hooks bypass strict CRC32 and file-size equality gates, allowing modified or transferred save files to load effortlessly.
+- **Steam Complete Edition Saves (`convert_ce_save.py`)**: The v1.0.8.0 engine checks every save block against its own layout, and Complete Edition (`v1.2.0.x`) saves differ in three blocks — Radar (blip names stored as 60-byte UTF-16 instead of 30-byte ASCII), Stats (26 radio-station listening timers instead of 20) and Radio (playback state). `tools/convert_ce_save.py` rewrites them into the v1.0.8.0 layout (originals kept in `savegames/ce_saves_backup`); story progress, stats and everything else carry over byte for byte, and radio stations simply start fresh. The installer converts saves already in the save folder automatically; to bring over saves later (e.g. from Steam/CrossOver's `Documents/Rockstar Games/GTA IV/Profiles/<id>/SGTA4xx`), copy them into the save folder and run:
+  ```sh
+  python3 tools/convert_ce_save.py
+  ```
 - **Standalone Save Tool (`fix_save.py`)**: Includes `tools/fix_save.py` (and bundled in the `.app`) to inspect, verify, back up (`.bak`), and batch-repair save files directly from Terminal:
   ```sh
   python3 tools/fix_save.py [path/to/SGTA4xx]
