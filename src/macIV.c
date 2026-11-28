@@ -18,6 +18,15 @@ static int file_exists(const char *path) {
     return (stat(path, &st) == 0);
 }
 
+static int has_episodes_in_dir(const char *gamedata_path) {
+    char p[PATH_MAX];
+    snprintf(p, sizeof(p), "%s/TLAD/setup2.xml", gamedata_path);
+    if (file_exists(p)) return 1;
+    snprintf(p, sizeof(p), "%s/TBoGT/setup2.xml", gamedata_path);
+    if (file_exists(p)) return 1;
+    return 0;
+}
+
 static void mkdir_p(const char *path) {
     char tmp[PATH_MAX];
     char *p = NULL;
@@ -34,28 +43,52 @@ static void mkdir_p(const char *path) {
     mkdir(tmp, 0755);
 }
 
-static void set_default_preferences(const char *folder_path) {
+static CFStringRef get_pref_domain(void) {
+    CFBundleRef main_bundle = CFBundleGetMainBundle();
+    CFStringRef bid = main_bundle ? CFBundleGetIdentifier(main_bundle) : NULL;
+    return bid ? bid : PREF_DOMAIN;
+}
+
+static void set_default_preferences(const char *folder_path, int has_episodes) {
+    CFStringRef domain = get_pref_domain();
     CFStringRef key = CFSTR("GameFolder");
     CFStringRef val = CFStringCreateWithCString(kCFAllocatorDefault, folder_path, kCFStringEncodingUTF8);
     if (val) {
-        CFPreferencesSetAppValue(key, val, PREF_DOMAIN);
+        CFPreferencesSetAppValue(key, val, domain);
         CFRelease(val);
     }
 
     // Default Anti-Aliasing to SMAA + MetalFX spatial (index 4) if not already configured
-    CFPropertyListRef cur_aa = CFPreferencesCopyAppValue(CFSTR("AntiAliasing"), PREF_DOMAIN);
+    CFPropertyListRef cur_aa = CFPreferencesCopyAppValue(CFSTR("AntiAliasing"), domain);
     if (!cur_aa) {
         int default_aa = 4;
         CFNumberRef aa_num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &default_aa);
         if (aa_num) {
-            CFPreferencesSetAppValue(CFSTR("AntiAliasing"), aa_num, PREF_DOMAIN);
+            CFPreferencesSetAppValue(CFSTR("AntiAliasing"), aa_num, domain);
             CFRelease(aa_num);
         }
     } else {
         CFRelease(cur_aa);
     }
 
-    CFPreferencesAppSynchronize(PREF_DOMAIN);
+    // Enable Complete Edition DLC episodes (TLAD / TBoGT) automatically if present and not explicitly overridden
+    if (has_episodes) {
+        CFPropertyListRef cur_ep = CFPreferencesCopyAppValue(CFSTR("Episodes"), domain);
+        if (!cur_ep) {
+            CFPreferencesSetAppValue(CFSTR("Episodes"), kCFBooleanTrue, domain);
+            // Prevent Liberty Pro Max's one-time ClearedOnce migration from stripping Episodes on first run
+            CFPropertyListRef cur_sco = CFPreferencesCopyAppValue(CFSTR("StoredChangesOnly"), domain);
+            if (!cur_sco) {
+                CFPreferencesSetAppValue(CFSTR("StoredChangesOnly"), kCFBooleanTrue, domain);
+            } else {
+                CFRelease(cur_sco);
+            }
+        } else {
+            CFRelease(cur_ep);
+        }
+    }
+
+    CFPreferencesAppSynchronize(domain);
 }
 
 static void ensure_user_directories(void) {
@@ -239,9 +272,13 @@ int main(int argc, char *argv[]) {
     int has_baked_data = file_exists(gtaiv_exe);
 
     if (has_baked_data) {
+        int has_episodes = has_episodes_in_dir(gamedata_path);
         setenv("GTAIV_GAME_DIR", gamedata_path, 1);
         setenv("RECOMP_UPSCALER", "metalfx-spatial", 0);
-        set_default_preferences(gamedata_path);
+        if (has_episodes) {
+            setenv("GTAIV_EPISODES", "1", 0);
+        }
+        set_default_preferences(gamedata_path, has_episodes);
 
         // Ensure commandline.txt exists with default modern memory settings (-norestrictions, -nomemrestrict, -availablevidmem 2047)
         char cmdline_path[PATH_MAX];

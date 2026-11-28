@@ -531,6 +531,27 @@ void hook_007D8C44(Ctx& c) { CmpFlags<1>(c, 0, 0); }
 EOF
 fi
 
+# Enable Complete Edition episodes (TLAD / TBoGT) by default when their folders exist
+LAUNCHER_OPTS_H="$BUILDER_APP/Contents/Resources/kit/src/launcher_options.h"
+if [ -f "$BUILDER_ZIP" ] && [ -f "$LAUNCHER_OPTS_H" ]; then
+	unzip -p "$BUILDER_ZIP" "Liberty Pro Max Builder.app/Contents/Resources/kit/src/launcher_options.h" > "$LAUNCHER_OPTS_H" 2>/dev/null || true
+fi
+if [ -f "$LAUNCHER_OPTS_H" ]; then
+	python3 - "$LAUNCHER_OPTS_H" << 'EOF'
+import sys
+path = sys.argv[1]
+with open(path, 'r') as f:
+    c = f.read()
+c = c.replace(
+    '{@"Episodes", "GTAIV_EPISODES", @"The episodes, when their folders are in the game\'s", false, true}',
+    '{@"Episodes", "GTAIV_EPISODES", @"The episodes, when their folders are in the game\'s", true, true}'
+)
+c = c.replace('@"PlayerFullDamage", @"Episodes", @"PhoneCheats"', '@"PlayerFullDamage", @"PhoneCheats"')
+with open(path, 'w') as f:
+    f.write(c)
+EOF
+fi
+
 # ---------------------------------------------------------------------------
 # Step 4: Translating & compiling native game engine
 # ---------------------------------------------------------------------------
@@ -792,6 +813,10 @@ fi
 defaults write io.github.awis13.liberty-pro-max GameFolder "$GDATA" 2>/dev/null || true
 defaults write io.github.awis13.liberty-pro-max AntiAliasing -int 4 2>/dev/null || true
 defaults write io.github.awis13.liberty-pro-max VerticalSync -int 1 2>/dev/null || true
+if [ ${#EPISODES_FOUND[@]} -gt 0 ]; then
+	defaults write io.github.awis13.liberty-pro-max Episodes -bool true 2>/dev/null || true
+	defaults write io.github.awis13.liberty-pro-max StoredChangesOnly -bool true 2>/dev/null || true
+fi
 mkdir -p "$HOME/Library/Application Support/gtaiv"
 
 # Convert any Steam Complete Edition saves already in the save folder to the

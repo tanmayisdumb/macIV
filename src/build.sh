@@ -91,6 +91,7 @@ echo "--> Applying engine compatibility hooks (CE phone fix, savegame CRC32/size
 MANIFEST="$APP_DIR/Contents/Resources/kit/manifest/gtaiv.manifest"
 EPISODES_CPP="$APP_DIR/Contents/Resources/kit/src/episodes.cpp"
 COMMUNITY_CPP="$APP_DIR/Contents/Resources/kit/src/community_fixes.cpp"
+LAUNCHER_OPTS_H="$APP_DIR/Contents/Resources/kit/src/launcher_options.h"
 
 if [ -f "$MANIFEST" ]; then
     if ! grep -q "008AE060" "$MANIFEST"; then
@@ -130,6 +131,22 @@ void f_008AE060(Ctx& c) {
     c = c.replace('}  // namespace recomp::gen', hook)
     with open(path, 'w') as f:
         f.write(c)
+EOF
+fi
+
+if [ -f "$LAUNCHER_OPTS_H" ]; then
+    python3 - "$LAUNCHER_OPTS_H" << 'EOF'
+import sys
+path = sys.argv[1]
+with open(path, 'r') as f:
+    c = f.read()
+c = c.replace(
+    '{@"Episodes", "GTAIV_EPISODES", @"The episodes, when their folders are in the game\'s", false, true}',
+    '{@"Episodes", "GTAIV_EPISODES", @"The episodes, when their folders are in the game\'s", true, true}'
+)
+c = c.replace('@"PlayerFullDamage", @"Episodes", @"PhoneCheats"', '@"PlayerFullDamage", @"PhoneCheats"')
+with open(path, 'w') as f:
+    f.write(c)
 EOF
 fi
 
